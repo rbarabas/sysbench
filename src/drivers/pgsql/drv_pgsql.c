@@ -545,6 +545,15 @@ static db_error_t pgsql_check_status(db_conn_t *con, PGresult *pgres,
     xfree(con->sql_state);
     xfree(con->sql_errmsg);
 
+    char *sql_state = PQresultErrorField(pgres, PG_DIAG_SQLSTATE));
+    char *message_primary = PQresultErrorField(pgres, PG_DIAG_MESSAGE_PRIMARY));
+
+    if (!sql_state || !message_primary) {
+      log_text(LOG_FATAL, "%s() failed without debug info.", funcname);
+      PQclear(pgres);
+      break;
+    }
+
     con->sql_state = strdup(PQresultErrorField(pgres, PG_DIAG_SQLSTATE));
     con->sql_errmsg = strdup(PQresultErrorField(pgres, PG_DIAG_MESSAGE_PRIMARY));
 
